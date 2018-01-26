@@ -1,0 +1,35 @@
+# Dataset Parameters
+dataset_dir: datasets/data
+cache_dir: .cache
+
+# Query Parameters
+number: 100
+categories:
+    - 3d-printing
+    - gadgets
+    - hobby
+    - household
+    - models
+    - tools
+    - toys-and-games
+    - art-tools
+    - scans-and-replicas
+    - sculptures
+    - audio
+    - computer
+    - sport-and-outdoors
+    - bathroom
+    - containers
+    - household-supplies
+    - kitchen-and-dining
+    - office
+    - organization
+    - outdoor-and-garden
+    - food-and-drink
+    - hand-tools
+    - machine-tools
+    - tool-holders-and-boxes
+licenses:
+    - Creative Commons - Public Domain Dedication
+
+

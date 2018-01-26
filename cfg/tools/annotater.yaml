@@ -1,0 +1,9 @@
+# Dataset Parameters
+dataset_dir: datasets/data
+
+# Annotation Parameters
+target_key: score
+default_value: 0
+set_value: 1
+override: True
+
