@@ -33,7 +33,8 @@ def main():
     override = config['override']
 
     ds = ThingiverseDataset(config['dataset_dir'])
-    for thing_id in ds.keys:
+
+    for i, thing_id in enumerate(ds.keys):
         thing = None
         thing_metadata = ds.metadata(thing_id)
 
@@ -51,6 +52,7 @@ def main():
 
         if thing:
             ds.save(thing, only_metadata=True)
+        logging.log(31, '{}/{} things...'.format(i, len(ds.keys)))
 
 if __name__ == "__main__":
     main()

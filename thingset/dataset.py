@@ -79,13 +79,16 @@ class ThingiverseDataset(object):
         """Return tuples of (thing_id, model_id) for all models that have a particular
         metadata key/value pair.
         """
-        matches = []
+        matches = {}
         for thing_id in self.keys:
             thing_metadata = self._thing_metadata[thing_id]
+            model_ids = []
             for model_id in thing_metadata['models']:
                 model_metadata = thing_metadata['models'][model_id]['metadata']
                 if key in model_metadata and model_metadata[key] == value:
-                    matches.append((thing_id, model_id))
+                    model_ids.append(model_id)
+            if len(model_ids) > 0:
+                matches[thing_id] = model_ids
         return matches
 
     def save(self, thing, only_metadata=False):
