@@ -1,0 +1,8 @@
+min_border_width_pct: 0.20
+max_border_width_pct: 0.50
+min_tab_height_pct: 0.20
+max_tab_height_pct: 0.50
+min_depth: 0.001
+max_depth: 0.002
+offset: 0.0001
+
