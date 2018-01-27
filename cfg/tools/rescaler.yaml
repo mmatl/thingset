@@ -1,0 +1,13 @@
+# Dataset Parameters
+dataset_dir: datasets/data
+
+# Annotation Parameters
+identifier_key: score
+identifier_value: 1
+scale_key: rescale_multiplier
+default_scale: 1.0
+override: False
+
+# Gripper Mesh Parameters
+gripper_filename: data/grippers/yumi_metal_spline.obj
+

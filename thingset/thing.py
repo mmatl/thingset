@@ -131,7 +131,7 @@ class Thing(object):
     def meshes(self):
         return [m.mesh for m in self.models]
 
-    def export(self, path, only_metadata=False):
+    def export(self, path, only_metadata=False, model_keys=None):
         """Save the thing to the given directory.
 
         Parameters
@@ -140,6 +140,8 @@ class Thing(object):
             A directory in which to save the thing.
         only_metadata : bool
             If True, only the metadata is written (not the mesh filenames).
+        model_keys : list of str
+            The keys of the models to save. If None, all models are saved.
         """
         json_dict = {
             'id'            : self._id,
@@ -151,12 +153,14 @@ class Thing(object):
             'access_time'   : self._access_time,
             'models'        : {}
         }
+        if model_keys is None:
+            model_keys = [m.id for m in self.models]
 
         # Export models
         for model in self.models:
             basename = '{}.obj'.format(model.id)
             mesh_filename = os.path.join(path, basename)
-            if not only_metadata:
+            if not only_metadata and model.id in model_keys:
                 model.mesh.export(mesh_filename)
             baseid = re.search('(.*)_cc_[0-9]*$', model.id)
             if baseid is None:

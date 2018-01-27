@@ -91,7 +91,7 @@ class ThingiverseDataset(object):
                 matches[thing_id] = model_ids
         return matches
 
-    def save(self, thing, only_metadata=False):
+    def save(self, thing, only_metadata=False, model_keys=None):
         """Save a modified Thing out to the database.
 
         Parameters
@@ -100,9 +100,11 @@ class ThingiverseDataset(object):
             The thing to save.
         only_metadata : bool
             If True, only the metadata is written (not the mesh filenames).
+        model_keys : list of str
+            The keys of the models to save. If None, all models are saved.
         """
         thingpath = os.path.join(self._root, thing.id)
-        thing.export(thingpath, only_metadata)
+        thing.export(thingpath, only_metadata, model_keys)
 
     def vis(self, key):
         """Show all the models for a given Thing.
