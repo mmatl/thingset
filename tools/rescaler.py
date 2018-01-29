@@ -12,6 +12,8 @@ from visualization import Visualizer3D as vis
 from thingset import ThingiverseDataset
 
 def rescale_callback(viewer, key, rot, stf, adder):
+    if stf.scale + adder <= 0:
+        return
     stf.scale += adder
     vis.get_object(key).T_obj_world = rot.dot(stf)
 
@@ -84,6 +86,8 @@ def main():
                 registered_keys= {
                     'j' : (rescale_callback, ['model', rot, stf, 0.1]),
                     'k' : (rescale_callback, ['model', rot, stf, -0.1]),
+                    'u' : (rescale_callback, ['model', rot, stf, 1.0]),
+                    'i' : (rescale_callback, ['model', rot, stf, -1.0]),
                     'h' : (rotate_callback,  ['model', rot, stf])
                 }
                 vis.figure(registered_keys=registered_keys)

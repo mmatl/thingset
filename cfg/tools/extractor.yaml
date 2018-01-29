@@ -1,0 +1,8 @@
+# Dataset Parameters
+dataset_dir: datasets/data
+output_dir: datasets/cleaned
+
+# Annotation Parameters
+identifier_key: score
+identifier_value: 1
+

@@ -104,7 +104,10 @@ class ThingiverseDataset(object):
             The keys of the models to save. If None, all models are saved.
         """
         thingpath = os.path.join(self._root, thing.id)
+        if not os.path.exists(thingpath):
+            os.makedirs(thingpath)
         thing.export(thingpath, only_metadata, model_keys)
+        self._thing_metadata[thing.id] = Thing.load_metadata(thingpath)
 
     def vis(self, key):
         """Show all the models for a given Thing.

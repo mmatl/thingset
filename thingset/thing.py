@@ -1,5 +1,6 @@
 """Model and Thing from Thingiverse Dataset
 """
+import copy
 import datetime
 import json
 import logging
@@ -59,6 +60,16 @@ class Model(object):
         """dict : Annotated metadata for the model.
         """
         return self._metadata
+
+    def copy(self):
+        """Returns a copy of the Model.
+
+        Returns
+        -------
+        Model
+            The copy.
+        """
+        return Model(self.id, self.name, self.mesh.copy(), copy.copy(self.metadata))
 
 
 class Thing(object):
@@ -177,6 +188,29 @@ class Thing(object):
         # Export metadata
         json_filename = os.path.join(path, 'metadata.json')
         json.dump(json_dict, open(json_filename, 'w'), sort_keys=True, indent=4, separators=(',', ': '))
+
+    def copy(self, model_keys=None):
+        """Get a copy of the Thing.
+
+        Parameters
+        ----------
+        model_keys : list of str
+            The keys of the models to copy into the new thing. If None, all models are copied.
+
+        Returns
+        -------
+        Thing
+            The copied Thing.
+        """
+        if model_keys is None:
+            model_keys = [m.id for m in self.models]
+
+        models = {}
+        for mid in model_keys:
+            models[mid] = self[mid].copy()
+
+        return Thing(self.id, self.name, self.author, self.license['type'], self.license['url'],
+                     self.category, self.access_time, models)
 
     def __getitem__(self, key):
         """Retrieve a particular model.
