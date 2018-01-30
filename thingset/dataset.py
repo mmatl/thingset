@@ -5,6 +5,7 @@ import json
 import logging
 from lxml import html
 import os
+import re
 import requests
 import time
 import urllib
@@ -90,6 +91,33 @@ class ThingiverseDataset(object):
             if len(model_ids) > 0:
                 matches[thing_id] = model_ids
         return matches
+
+    def search_by_keyword(self, keyword):
+        """Return the keys of all things which match a keyword.
+
+        Paramters
+        ---------
+        keyword : str
+            The target keyword.
+
+        Returns
+        -------
+        list of str
+            The keys of the matching things.
+        """
+        matching_keys = []
+        for thing_id in self.keys:
+            thing_metadata = self._thing_metadata[thing_id]
+            if re.search(keyword.lower(), thing_metadata['name'], re.IGNORECASE):
+                matching_keys.append(thing_id)
+                continue
+
+            for model_id in thing_metadata['models']:
+                model_metadata = thing_metadata['models'][model_id]
+                if re.search(keyword.lower(), model_metadata['name'], re.IGNORECASE):
+                    matching_keys.append(thing_id)
+                    break
+        return matching_keys
 
     def save(self, thing, only_metadata=False, model_keys=None):
         """Save a modified Thing out to the database.
