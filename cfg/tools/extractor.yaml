@@ -1,6 +1,6 @@
 # Dataset Parameters
 dataset_dir: datasets/data
-output_dir: datasets/cleaned
+output_dir: datasets/recleaned
 
 # Annotation Parameters
 identifier_key: score

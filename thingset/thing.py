@@ -139,6 +139,10 @@ class Thing(object):
         return self._models.values()
 
     @property
+    def model_keys(self):
+        return self._models.keys()
+
+    @property
     def meshes(self):
         return [m.mesh for m in self.models]
 
@@ -350,7 +354,7 @@ class Thing(object):
                         fout.write(chunk)
 
             try:
-                mesh = trimesh.load_mesh(output_filename)
+                mesh = trimesh.load_mesh(output_filename, validate=True)
                 mesh.apply_scale(0.001)
             except:
                 logging.log(32, '\t\tUnable to load mesh file.')

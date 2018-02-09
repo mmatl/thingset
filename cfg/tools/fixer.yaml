@@ -1,0 +1,7 @@
+# Dataset Parameters
+dataset_dir: datasets/data
+cache_dir: .cache
+
+# Annotation Parameters
+scale_key: rescale_multiplier
+score_key: score

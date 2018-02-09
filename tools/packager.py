@@ -1,6 +1,7 @@
+import os
 import numpy as np
-from scipy.spatial import Delaunay
 import trimesh
+import triangle
 
 from autolab_core import RigidTransform, YamlConfig
 from visualization import Visualizer3D as vis
@@ -152,9 +153,12 @@ class Packager(object):
             orig_vertices[1][:2],
             orig_vertices[2][:2]
         ])
-        faces = Delaunay(verts_2d).simplices
-        ind = np.where(np.equal(np.sort(faces), np.array([4,5,6])).all(1))[0][0]
-        faces = np.delete(faces, ind, 0)
+        plsg = {
+            'segments' : np.array([[5,4],[6,5],[4,6]]).astype(np.int32),
+            'vertices' : verts_2d,
+            'holes' : np.array(np.mean(verts_2d[4:],axis=0))
+        }
+        faces = triangle.triangulate(plsg, 'pc')['triangles']
         faces[faces == 4] = vinds[0] - vo
         faces[faces == 5] = vinds[1] - vo
         faces[faces == 6] = vinds[2] - vo
@@ -182,11 +186,25 @@ class Packager(object):
         return mesh
 
 if __name__ == '__main__':
-    m = trimesh.creation.icosahedron()
     cfg = YamlConfig('cfg/tools/packager.yaml')
     p = Packager(cfg)
-    m = p.package(m)
+    #m = trimesh.load_mesh('./datasets/thingiverse-pruned-meshes/2956506.obj')
+    #m = p.package(m)
+    #vis.figure()
+    #vis.mesh(m)
+    #vis.show()
+    #exit(0)
 
-    vis.figure()
-    vis.mesh(m, style='surface')
-    vis.show(animate=True)
+    if not os.path.exists(cfg['out_dir']):
+        os.makedirs(cfg['out_dir'])
+
+    for fn in os.listdir(cfg['in_dir']):
+        full_fn = os.path.join(cfg['in_dir'], fn)
+        fn = fn.split('.')[0]
+        exp_fn = os.path.join(cfg['out_dir'], '{}_packaged.obj'.format(fn))
+        os.rename(full_fn, exp_fn)
+        #m = trimesh.load_mesh(full_fn)
+        #m = p.package(m)
+        #bn, ext = os.path.splitext(fn)
+        #exp_fn = os.path.join(cfg['out_dir'], '{}_packaged.obj'.format(fn))
+        #m.export(exp_fn)
