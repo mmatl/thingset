@@ -150,7 +150,7 @@ class ThingiverseDataset(object):
             vis.mesh(model.mesh, style='surface')
             vis.show()
 
-    def retrieve_from_thingiverse(self, n, cache_dir, params=None):
+    def retrieve_from_thingiverse(self, n, cache_dir, params=None, thing_ids=None):
         """Retrieve things from Thingiverse and save them to the dataset.
 
         Parameters
@@ -162,88 +162,96 @@ class ThingiverseDataset(object):
         params : dict
             A set of parameters, including 'category', 'license', and 'query'. Optional.
         """
-        baseurl = 'http://www.thingiverse.com/search/page:{}?type=things'
 
-        if params is None:
-            baseurl = 'http://www.thingiverse.com/explore/newest/page:{}'
+        all_thing_ids = []
+        if thing_ids is not None:
+            all_thing_ids = thing_ids
         else:
-            if 'category' in params:
-                if params['category'] not in CATEGORY_IDS:
-                    raise ValueError('{} is an invalid category.'.format(params['category']))
-                category_id = CATEGORY_IDS[params['category']]
-                baseurl = '{}&category_id={}'.format(baseurl, category_id)
+            baseurl = 'http://www.thingiverse.com/search/page:{}?type=things'
 
-            if 'license' in params:
-                if params['license'] not in LICENSE_IDS:
-                    raise ValueError('{} is an invalid license.'.format(params['license']))
-                license_id = LICENSE_IDS[params['license']]
-                baseurl = '{}&license={}'.format(baseurl, license_id)
+            if params is None:
+                baseurl = 'http://www.thingiverse.com/explore/newest/page:{}'
+            else:
+                if 'category' in params:
+                    if params['category'] not in CATEGORY_IDS:
+                        raise ValueError('{} is an invalid category.'.format(params['category']))
+                    category_id = CATEGORY_IDS[params['category']]
+                    baseurl = '{}&category_id={}'.format(baseurl, category_id)
 
-            if 'query' in params and params['query'] != '':
-                baseurl = '{}&q={}'.format(baseurl, urllib.quote(params['query']))
+                if 'license' in params:
+                    if params['license'] not in LICENSE_IDS:
+                        raise ValueError('{} is an invalid license.'.format(params['license']))
+                    license_id = LICENSE_IDS[params['license']]
+                    baseurl = '{}&license={}'.format(baseurl, license_id)
 
-        logging.log(31, 'Retrieving up to {} items from Thingiverse with parameters:'.format(n))
-        logging.log(31, '\t{}'.format(json.dumps(params, indent=4)))
+                if 'query' in params and params['query'] != '':
+                    baseurl = '{}&q={}'.format(baseurl, urllib.quote(params['query']))
 
-        # Iterate through available pages
-        page = 1
-        prev_path = ''
+            logging.log(31, 'Retrieving up to {} items from Thingiverse with parameters:'.format(n))
+            logging.log(31, '\t{}'.format(json.dumps(params, indent=4)))
+
+            # Iterate through available pages
+            page = 1
+            prev_path = ''
+            num_imports = 0
+
+            while True:
+                # Load search page
+                url = baseurl.format(page)
+                page += 1
+
+                # Prevent DDOS
+                time.sleep(0.5)
+
+                r = requests.get(url)
+
+                logging.log(31, 'Retrieving page {}...'.format(page - 1))
+
+                if r.status_code != 200:
+                    logging.log(32, 'Page {} retrieval failed.')
+                    logging.log(32, '\tQuery URL: {}'.format(url))
+                    logging.log(32, '\tStatus Code: {}'.format(r.status_code))
+                    continue
+
+                # If prev url is same as new one, stop
+                path = urlparse.urlparse(r.url).path
+                if prev_path == path:
+                    break
+                prev_path = path
+
+                # Extract thing IDs
+                root = html.fromstring(r.text)
+                thing_ids = [x.get('data-id') for x in root.find_class('thing')]
+                logging.log(31, '{} things retrieved on page {}.'.format(len(thing_ids), page - 1))
+                if len(thing_ids) == 0:
+                    break
+                all_thing_ids.extend(thing_ids)
+
+        # Retrieve and save things
         num_imports = 0
-
-        while True:
-            # Load search page
-            url = baseurl.format(page)
-            page += 1
-
-            # Prevent DDOS
-            time.sleep(0.5)
-
-            r = requests.get(url)
-
-            logging.log(31, 'Retrieving page {}...'.format(page - 1))
-
-            if r.status_code != 200:
-                logging.log(32, 'Page {} retrieval failed.')
-                logging.log(32, '\tQuery URL: {}'.format(url))
-                logging.log(32, '\tStatus Code: {}'.format(r.status_code))
+        for thing_id in all_thing_ids:
+            if thing_id in self.keys:
                 continue
 
-            # If prev url is same as new one, stop
-            path = urlparse.urlparse(r.url).path
-            if prev_path == path:
+            # Retrieve the thing
+            time.sleep(0.5)
+            t = Thing.retrieve(thing_id, cache_dir)
+            if t is None:
+                continue
+
+            # Export the thing, then lazy-load a copy to reduce memory usage.
+            thingdir = os.path.join(self._root, t.id)
+            if not os.path.exists(thingdir):
+                os.makedirs(thingdir)
+            t.export(thingdir)
+            self._thing_metadata[thing_id] = Thing.load_metadata(thingdir)
+
+            num_imports += 1
+
+            logging.log(31, '{}/{} things retrieved.'.format(num_imports, n))
+
+            if num_imports >= n:
                 return num_imports
-            prev_path = path
-
-            # Extract thing IDs
-            root = html.fromstring(r.text)
-            thing_ids = [x.get('data-id') for x in root.find_class('thing')]
-            logging.log(31, '{} things retrieved on page {}.'.format(len(thing_ids), page - 1))
-            if len(thing_ids) == 0:
-                return num_imports
-
-            # Retrieve and save things
-            for thing_id in thing_ids:
-                if thing_id in self.keys:
-                    continue
-
-                # Retrieve the thing
-                t = Thing.retrieve(thing_id, cache_dir)
-                if t is None:
-                    continue
-
-                # Export the thing, then lazy-load a copy to reduce memory usage.
-                thingdir = os.path.join(self._root, t.id)
-                if not os.path.exists(thingdir):
-                    os.makedirs(thingdir)
-                t.export(thingdir)
-                self._thing_metadata[thing_id] = Thing.load_metadata(thingdir)
-
-                num_imports += 1
-
-                logging.log(31, '{}/{} things retrieved.'.format(num_imports, n))
-
-                if num_imports >= n:
-                    return num_imports
 
     def __getitem__(self, key):
         """Load a thing, including its objects.

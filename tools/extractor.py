@@ -4,6 +4,7 @@
 import argparse
 import logging
 import numpy as np
+import os
 import trimesh
 
 from autolab_core import YamlConfig, RigidTransform, SimilarityTransform
@@ -33,6 +34,11 @@ def main():
 
     dsold = ThingiverseDataset(config['dataset_dir'])
     dsnew = ThingiverseDataset(config['output_dir'])
+    meshdir = None
+    if 'mesh_out_dir' in config:
+        meshdir = config['mesh_out_dir']
+        if not os.path.exists(meshdir):
+            os.makedirs(meshdir)
 
     for i, thing_id in enumerate(dsold.keys):
         thing_metadata = dsold.metadata(thing_id)
@@ -45,10 +51,12 @@ def main():
             # If the identifier isn't in the model's metadata, skip it
             if identifier_key in model_data['metadata'] and model_data['metadata'][identifier_key] == identifier_value:
                 model_keys.append(model_id)
+                if meshdir is not None:
+                    dsold[thing_id]._models[model_id].mesh.export(os.path.join(meshdir, '{}.obj'.format(model_id)))
 
-        if len(model_keys) > 0:
-            thing = dsold[thing_id]
-            dsnew.save(thing.copy(model_keys))
+        #if len(model_keys) > 0:
+        #    thing = dsold[thing_id]
+        #    dsnew.save(thing.copy(model_keys))
 
 if __name__ == "__main__":
     main()

@@ -23,14 +23,15 @@ def main():
     config = YamlConfig(config_filename)
 
     ds = ThingiverseDataset(config['dataset_dir'])
+    thing_ids = [str(s) for s in config['thing_ids']]
     for license in config['licenses']:
         for category in config['categories']:
             params = {
-                'category' : category,
+            #    'category' : category,
                 'license' : license,
                 'query' : ''
             }
-            ds.retrieve_from_thingiverse(config['number'], config['cache_dir'], params)
+            ds.retrieve_from_thingiverse(config['number'], config['cache_dir'], params, thing_ids)
 
 if __name__ == "__main__":
     main()

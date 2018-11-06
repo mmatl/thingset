@@ -1,6 +1,7 @@
 # Dataset Parameters
 dataset_dir: datasets/data
 output_dir: datasets/recleaned
+mesh_out_dir: datasets/meshes
 
 # Annotation Parameters
 identifier_key: score

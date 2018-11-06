@@ -306,7 +306,7 @@ class Thing(object):
             os.makedirs(cache_dir)
 
         # Retrieve a page for the thing
-        url = 'https://www.thingiverse.com/thing:{}'.format(thing_id)
+        url = 'https://www.thingiverse.com/thing:{}/files'.format(thing_id)
 
         logging.log(31, 'Retrieving thing {}...'.format(thing_id))
 
@@ -320,19 +320,20 @@ class Thing(object):
         root = html.fromstring(r.text)
 
         # Retrieve basic metadata about the thing
-        thing_name = root.find_class('thing-name')[0].text
-        author_name = root.find_class('creator-name')[0][0].text
+        thing_name = 'none'#root.find_class('item-page-info')[0].text
+        author_name = 'none'#root.find_class('creator-name')[0][0].text
         license_name = root.find_class('thing-license')[0].get('title')
         license_url = root.find_rel_links('license')[0].get('href')
-        _, category = os.path.split(root.find_class('thing-category')[0].get('href'))
+        #_, category = os.path.split(root.find_class('thing-category')[0].get('href'))
+        category = 'none'
 
         # Retrieve the individual cad files
         models = {}
-        links = root.find_class('thing-file-download-link')
+        links = root.find_class('file-download')
         for a in links:
             # Retrieve metadata
             file_id = a.get('data-file-id')
-            file_name = a.get('data-file-name')
+            file_name = a.get('title')
             base_name, ext = os.path.splitext(file_name)
             if ext.lower() not in [".stl", ".obj", ".ply", ".off"]:
                 continue
@@ -390,6 +391,8 @@ class Thing(object):
             # Otherwise, save each of the connected components separately
             else:
                 logging.log(31, '\t\tMesh had {} connected components, splitting.'.format(len(ccs)))
+                mesh.apply_translation(-mesh.center_mass)
+                models[file_id] = Model(file_id, base_name, mesh)
                 for i, cc in enumerate(ccs):
                     cc.apply_translation(-cc.center_mass)
                     file_id_str = '{}_cc_{}'.format(file_id, i)

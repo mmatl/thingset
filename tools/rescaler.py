@@ -90,11 +90,10 @@ def main():
                     'i' : (rescale_callback, ['model', rot, stf, -1.0]),
                     'h' : (rotate_callback,  ['model', rot, stf])
                 }
-                vis.figure(registered_keys=registered_keys)
+                vis.figure()
                 vis.mesh(gripper_mesh, T_mesh_world=RigidTransform(translation=(0,0,-0.08), from_frame='obj', to_frame='world'), style='surface', color=(0.3, 0.3, 0.3), name='gripper')
                 vis.mesh(model.mesh, style='surface', name='model')
-                vis.show(animate=True)
-
+                vis.show(animate=True, registered_keys=registered_keys)
                 # Transform the model and update its metadata
                 model.mesh.apply_transform(stf.matrix)
                 model.metadata[scale_key] = stf.scale

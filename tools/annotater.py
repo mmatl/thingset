@@ -46,9 +46,9 @@ def main():
                 model = thing[model_id]
                 logging.log(31, u"{} ({}): {} ({})".format(thing.name, thing.id, model.name, model.id).encode('utf-8'))
                 model.metadata[target_key] = default_value
-                vis.figure(registered_keys={'g' : (good_label_callback, [model, target_key, set_value])})
+                vis.figure()
                 vis.mesh(model.mesh, style='surface')
-                vis.show(animate=True)
+                vis.show(animate=True, registered_keys={'g' : (good_label_callback, [model, target_key, set_value])})
 
         if thing:
             ds.save(thing, only_metadata=True)
