@@ -37,6 +37,7 @@ class Packager(object):
 
     def package(self, mesh):
         if not mesh.is_watertight:
+            print mesh.metadata
             raise ValueError('Must have a watertight mesh to package it!')
 
         # Sample values
@@ -47,8 +48,10 @@ class Packager(object):
         depth = np.random.uniform(self._config['min_depth'],
                                   self._config['max_depth'])
         offset = self._config['offset']
+        ext_limits = np.array(self._config['ext_limits'])
 
-        return self._package(mesh, border_width_pct, tab_height_pct, depth, offset)
+        # Determine if the object is packable
+        return self._package(mesh, border_width_pct, tab_height_pct, depth, offset, ext_limits)
 
     def _get_packaged_pose(self, mesh):
         # Make copy of argument
@@ -85,11 +88,16 @@ class Packager(object):
 
         return min_rot.dot(min_tf)
 
-    def _package(self, mesh, border_width_pct, tab_height_pct, depth, offset):
+    def _package(self, mesh, border_width_pct, tab_height_pct, depth, offset, ext_limits):
         mesh = mesh.copy()
 
         pose = self._get_packaged_pose(mesh)
         mesh.apply_transform(pose)
+
+        # Determine if mesh should be packaged based on extents
+        extents = mesh.extents
+        if np.any(extents > ext_limits):
+            return None
 
         border_width = border_width_pct * mesh.extents[0]
         tab_height = tab_height_pct * mesh.extents[1]
@@ -188,12 +196,6 @@ class Packager(object):
 if __name__ == '__main__':
     cfg = YamlConfig('cfg/tools/packager.yaml')
     p = Packager(cfg)
-    #m = trimesh.load_mesh('./datasets/thingiverse-pruned-meshes/2956506.obj')
-    #m = p.package(m)
-    #vis.figure()
-    #vis.mesh(m)
-    #vis.show()
-    #exit(0)
 
     if not os.path.exists(cfg['out_dir']):
         os.makedirs(cfg['out_dir'])
@@ -201,10 +203,13 @@ if __name__ == '__main__':
     for fn in os.listdir(cfg['in_dir']):
         full_fn = os.path.join(cfg['in_dir'], fn)
         fn = fn.split('.')[0]
-        exp_fn = os.path.join(cfg['out_dir'], '{}_packaged.obj'.format(fn))
-        os.rename(full_fn, exp_fn)
-        #m = trimesh.load_mesh(full_fn)
-        #m = p.package(m)
-        #bn, ext = os.path.splitext(fn)
         #exp_fn = os.path.join(cfg['out_dir'], '{}_packaged.obj'.format(fn))
-        #m.export(exp_fn)
+        #os.rename(full_fn, exp_fn)
+        m = trimesh.load_mesh(full_fn)
+        m = p.package(m)
+        if m is not None:
+            if not m.is_watertight:
+                continue
+            bn, ext = os.path.splitext(fn)
+            exp_fn = os.path.join(cfg['out_dir'], '{}_packaged.obj'.format(fn))
+            m.export(exp_fn)

@@ -1,10 +1,11 @@
 min_border_width_pct: 0.20
-max_border_width_pct: 0.50
+max_border_width_pct: 0.40
 min_tab_height_pct: 0.20
-max_tab_height_pct: 0.50
+max_tab_height_pct: 0.25
 min_depth: 0.001
 max_depth: 0.002
-offset: 0.0001
+offset: 0.001
+ext_limits: [0.15, 0.25, 0.06]
 
-in_dir: ./datasets/thingiverse-packaged-meshes
-out_dir: ./datasets/thingiverse-packaged-meshes
+in_dir: ./tmpin/ycb
+out_dir: ./tmpout/ycb_packaged
